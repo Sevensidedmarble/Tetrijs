@@ -186,9 +186,9 @@ function check_lines() {
 }
 
 var board = [];
-for (var x = 0; x <= 20; x++) {
+for (var x = 1; x <= 10; x++) {
     board[x] = [];
-    for (var y = 0; y <= 20; y++) {
+    for (var y = 1; y <= 20; y++) {
         board[x][y] = false;
     }
 } 
@@ -196,8 +196,8 @@ for (var x = 0; x <= 20; x++) {
 function draw_board_debug() {
     ctx.fillStyle = "blue";
     ctx.font = "8px Arial";
-    for (var x = 0; x <= 10; x++) {
-        for (var y = 0; y <= 20; y++) {
+    for (var x = 1; x <= 10; x++) {
+        for (var y = 1; y <= 20; y++) {
             if (board[x][y] == true) { 
                 ctx.fillText("1", x*unit_size, y*unit_size);
             } else {
@@ -274,10 +274,12 @@ function update() {
 // run once at beginning of the game
 start();
 
+var speed = 2000;
+
 // get called repeatedly throughout the game
 window.setInterval(function(){
   update();
-}, 4000);
+}, speed);
 
 // set up keyboard events
 window.addEventListener("keydown", keydown_event, false);
