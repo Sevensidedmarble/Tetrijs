@@ -299,6 +299,7 @@ function start() {
 
 function update() {
   if (shapes[current_shape].stopped) {
+    check_lines();
     get_new_shape(current_shape+1);
   }
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -306,7 +307,7 @@ function update() {
   draw_stopped_shapes();
   draw_grid();
   draw_board_debug();
-  check_lines();
+  
 }
 
 // run once at beginning of the game
