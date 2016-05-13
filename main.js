@@ -1,6 +1,7 @@
 var canvas = document.getElementById('main_canvas');
 var ctx = canvas.getContext('2d');
 
+// helper functions
 function transpose(arr) {
   return Object.keys(arr[0]).map(function (c) {
     return arr.map(function (r) {
@@ -13,6 +14,19 @@ function rotate(arr) {
   arr = transpose(arr);
   arr.reverse();
   return arr;
+}
+
+function clone_object(obj) {
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+ 
+    var temp = obj.constructor(); // give temp the original obj's constructor
+    for (var key in obj) {
+        temp[key] = clone_object(obj[key]);
+    }
+ 
+    return temp;
 }
 
 var unit_size = 16
@@ -48,6 +62,8 @@ var z = [[1,1,0],
          [0,1,1],
          [0,0,0]]
 
+
+
 function draw_rect(color, x, y, w, h) {
   ctx.fillStyle = color;
   ctx.fillRect (x, y, w, h);
@@ -82,6 +98,18 @@ var Shape = function (x,y,type) {
       for(var n = 0; n < this.type[i].length; n++){
         if ( this.type[i][n] == 1 ) {
           board[i+this.x][n+this.y] = false;
+        }
+      }
+    }
+  }
+  this.remove_squares_from_shape = function(bx,by) {
+    for(var i = 0; i < this.type.length; i++){
+      for(var n = 0; n < this.type[i].length; n++){
+        if ( this.type[i][n] == 1 ) {
+          if ( ((this.x)+(i)) == bx && ((this.y)+(n)) == by ) {
+            this.type[i][n] = 0;
+            //ctx.clearRect((this.x*unit_size)+(i*unit_size), (this.y*unit_size)+(n*unit_size), unit_size, unit_size);
+          }        
         }
       }
     }
@@ -180,7 +208,17 @@ function check_lines() {
     }
     if (complete_line) { 
       console.log("line complete!");
-      board.splice(x, 19);   
+      // debugger;
+      for (var x = 1; x <= 10; x++) {   
+        if (board[x][y] == true) {  
+          board[x][y] = false;
+          for (var i = 0; i < shapes.length; i++) {
+            if (shapes[i] != undefined) {
+                shapes[i].remove_squares_from_shape(x,y);
+            }
+          }
+        } 
+      }
     }
   }
 }
@@ -251,7 +289,7 @@ var current_shape = 0
 var shapes = [];
 
 function get_new_shape(index) {
-  shapes[index] = new Shape(5,0,o);
+  shapes[index] = new Shape(5,0,clone_object(o));
   current_shape = index;
 }
 
@@ -274,10 +312,22 @@ function update() {
 // run once at beginning of the game
 start();
 
-var speed = 2000;
+var speed = 400;
+
+function faster() {
+  window.clearInterval(main_loop);
+  speed = speed - 250;
+  main_loop = window.setInterval(function(){ update(); }, speed);
+}
+
+function slower() {
+  window.clearInterval(main_loop);
+  speed = speed + 250;
+  main_loop = window.setInterval(function(){ update(); }, speed);
+}
 
 // get called repeatedly throughout the game
-window.setInterval(function(){
+main_loop = window.setInterval(function(){
   update();
 }, speed);
 
