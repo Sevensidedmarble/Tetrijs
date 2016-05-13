@@ -117,6 +117,11 @@ var Shape = function (x,y,type) {
       }
     }
   }
+  this.rotate_self = function() {
+    this.remove_board_values();
+    this.type = rotate(this.type);
+    this.set_board_values();
+  }
   this.clear = function() {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
@@ -138,6 +143,9 @@ var Shape = function (x,y,type) {
   this.check_x_collision = function() {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
+        if ( i+this.x < 1 || i+this.x > 10 && this.type[i][n] == 1 ) {
+          return true;
+        }
         if ( this.type[i][n] == 1 && board[i+this.x][n+this.y] == true ) {
           return true;
         }
@@ -162,9 +170,9 @@ var Shape = function (x,y,type) {
     // }
   }
   this.move = function(dir) {
-    if (this.x+dir.x < 1 || this.x+dir.x > 9) {
-      return;
-    }
+    // if (this.x+dir.x < 1 || this.x+dir.x > 9) {
+    //   return;
+    // }
     var old_x = this.x;
     var old_y = this.y;
     this.clear();
@@ -187,7 +195,11 @@ var Shape = function (x,y,type) {
   }
   this.drop = function() {
     this.move( {x:0, y:1} );
-    
+  }
+  this.drop_to_bottom = function() {
+    while (!this.stopped) {
+      this.drop(); 
+    }
   }
   this.set_board_values();  
 }
@@ -231,9 +243,9 @@ function check_lines() {
 }
 
 var board = [];
-for (var x = 1; x <= 10; x++) {
+for (var x = 0; x <= 11; x++) {
     board[x] = [];
-    for (var y = 1; y <= 20; y++) {
+    for (var y = 0; y <= 20; y++) {
         board[x][y] = false;
     }
 } 
@@ -280,7 +292,7 @@ function keydown_event(e) {
         break;
     case 38:
         // up key pressed
-        console.table(board);
+        shapes[current_shape].rotate_self();
         break;
     case 39:
         // right key pressed
@@ -288,6 +300,7 @@ function keydown_event(e) {
         break;
     case 40:
         // down key pressed
+        shapes[current_shape].drop_to_bottom();
         break;  
   } 
 }
