@@ -2,6 +2,12 @@ var canvas = document.getElementById('main_canvas');
 var ctx = canvas.getContext('2d');
 
 // helper functions
+
+function get_random(obj) {
+    var keys = Object.keys(obj)
+    return obj[keys[ keys.length * Math.random() << 0]];
+};
+
 function transpose(arr) {
   return Object.keys(arr[0]).map(function (c) {
     return arr.map(function (r) {
@@ -34,34 +40,29 @@ var grid_width = unit_size*10;
 var grid_height = unit_size*20;
 var grid_size = 16;
 
-var i = [[0,1,0,0],
-         [0,1,0,0],
-         [0,1,0,0],
-         [0,1,0,0]]
-
-var j = [[0,1,0],
-         [0,1,0],
-         [1,1,0]]
-
-var l = [[1,0,0],
-         [1,0,0],
-         [1,1,0]]
-
-var o = [[1,1],
-         [1,1]]
-
-var s = [[0,1,1],
-         [1,1,0],
-         [0,0,0]]
-
-var t = [[0,1,0],
-         [1,1,1],
-         [0,0,0]]
-
-var z = [[1,1,0],
-         [0,1,1],
-         [0,0,0]]
-
+var tetrominos = {
+  i:     [[0,1,0,0],
+          [0,1,0,0],
+          [0,1,0,0],
+          [0,1,0,0]],
+  j:     [[0,1,0],
+          [0,1,0],
+          [1,1,0]],
+  l:     [[1,0,0],
+          [1,0,0],
+          [1,1,0]],
+  o:     [[1,1],
+          [1,1]],
+  s:     [[0,1,1],
+          [1,1,0],
+          [0,0,0]],
+  t:     [[0,1,0],
+          [1,1,1],
+          [0,0,0]],
+  z:     [[1,1,0],
+          [0,1,1],
+          [0,0,0]]      
+}
 
 
 function draw_rect(color, x, y, w, h) {
@@ -83,6 +84,8 @@ var Shape = function (x,y,type) {
   this.x = x;
   this.y = y;
   this.type = type;
+  this.w = type[0].length;
+  this.l = type.length;
   this.stopped = false;
   this.set_board_values = function() {
     for(var i = 0; i < this.type.length; i++){
@@ -140,24 +143,28 @@ var Shape = function (x,y,type) {
         }
       }
     }
-    if (this.x < 1 || this.x > 9) {
-      return true;
-    }
   }
   this.check_y_collision = function() {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
+        if ( n+this.y > 20 && this.type[i][n] == 1 ) {
+          this.stopped = true;
+          return true;
+        }
         if ( this.type[i][n] == 1 && board[i+this.x][n+this.y] == true ) {
           this.stopped = true;
           return true;
         }
       }
     }
-    if (this.y == 19) {
-      this.stopped = true;
-    }
+    // if ( this.y == (20-this.l) ) {
+    //   this.stopped = true;
+    // }
   }
   this.move = function(dir) {
+    if (this.x+dir.x < 1 || this.x+dir.x > 9) {
+      return;
+    }
     var old_x = this.x;
     var old_y = this.y;
     this.clear();
@@ -289,7 +296,8 @@ var current_shape = 0
 var shapes = [];
 
 function get_new_shape(index) {
-  shapes[index] = new Shape(5,0,clone_object(o));
+  
+  shapes[index] = new Shape(5,0,clone_object(get_random(tetrominos)));
   current_shape = index;
 }
 
