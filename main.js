@@ -213,7 +213,7 @@ function draw_grid(){
       ctx.moveTo(grid_size, 0.5 + x + grid_size);
       ctx.lineTo(grid_width + grid_size, 0.5 + x + grid_size);
   }
-  ctx.strokeStyle = "black";
+  ctx.strokeStyle = "grey";
   ctx.stroke();
 }
 
@@ -227,7 +227,6 @@ function check_lines() {
     }
     if (complete_line) { 
       console.log("line complete!");
-      // debugger;
       for (var x = 1; x <= 10; x++) {   
         if (board[x][y] == true) {  
           board[x][y] = false;
@@ -238,6 +237,7 @@ function check_lines() {
           }
         } 
       }
+      shift_shapes_down(y)
     }
   }
 }
@@ -250,15 +250,23 @@ for (var x = 0; x <= 11; x++) {
     }
 } 
 
+function shift_shapes_down(y) {
+  for (var i = 0; i < shapes.length; i++) {
+    if ( shapes[i] != undefined && shapes[i].y < y ) {
+        shapes[i].drop();
+    }
+  }
+}
+
 function draw_board_debug() {
     ctx.fillStyle = "blue";
     ctx.font = "8px Arial";
     for (var x = 1; x <= 10; x++) {
         for (var y = 1; y <= 20; y++) {
             if (board[x][y] == true) { 
-                ctx.fillText("1", x*unit_size, y*unit_size);
+                ctx.fillText("1", x*unit_size+1, y*unit_size+15);
             } else {
-                ctx.fillText("0", x*unit_size, y*unit_size);
+                ctx.fillText("0", x*unit_size+1, y*unit_size+15);
             }
         }
     } 
@@ -327,7 +335,7 @@ function update() {
   drop_shapes();
   draw_stopped_shapes();
   draw_grid();
-  draw_board_debug();
+  // draw_board_debug();
   
 }
 
