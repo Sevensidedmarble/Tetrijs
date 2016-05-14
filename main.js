@@ -346,6 +346,7 @@ function update() {
   drop_shapes();
   draw_stopped_shapes();
   draw_grid();
+  score++;
   score_element.innerHTML = score;
   // draw_board_debug();
   
