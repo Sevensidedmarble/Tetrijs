@@ -16,22 +16,20 @@
 </head>
 <body>
     <div class="container">
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <div id="canvas_container">
-                    <canvas id="main_canvas" width="195" height="360"></canvas>
-                </div>
+        <div class="left"></div>
+        <div class="middle">
+            <div id="canvas_container">
+                <canvas id="main_canvas" width="195" height="360"></canvas>
             </div>
-            <div class="col-md-4">
-                <p>high-score:</p>
-                <p>seconds of your life wasted:</p>
-                </div>
+        </div>
+        <div class="right">
+            <p>high-score:</p>
+            <p>score: <span id="score"></span></p>
+            <p>level:</p>
+            <p>seconds of your life wasted:</p>
         </div>
     </div>
-    <div id="below_canvas">
-        <p>View on GitHub</p>
-    </div>
+    <div id="below_canvas"><p>View on GitHub</p></div>
 </body>
 <script src="main.js"></script>
 </html>

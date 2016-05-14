@@ -8,6 +8,15 @@ function get_random(obj) {
     return obj[keys[ keys.length * Math.random() << 0]];
 };
 
+function get_random_color() {
+    var letters = 'ABCDE'.split('');
+    var color = '#';
+    for (var i=0; i<3; i++ ) {
+        color += letters[Math.floor(Math.random() * letters.length)];
+    }
+    return color;
+}
+
 function transpose(arr) {
   return Object.keys(arr[0]).map(function (c) {
     return arr.map(function (r) {
@@ -87,6 +96,7 @@ var Shape = function (x,y,type) {
   this.w = type[0].length;
   this.l = type.length;
   this.stopped = false;
+  this.color = get_random_color();
   this.set_board_values = function() {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
@@ -135,7 +145,7 @@ var Shape = function (x,y,type) {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
         if ( this.type[i][n] == 1 ) {
-          draw_rect('rgb(0,180,40)', (this.x*unit_size)+(i*unit_size), (this.y*unit_size)+(n*unit_size), unit_size, unit_size);
+          draw_rect(this.color, (this.x*unit_size)+(i*unit_size), (this.y*unit_size)+(n*unit_size), unit_size, unit_size);
         }
       }
     }
@@ -238,6 +248,7 @@ function check_lines() {
         } 
       }
       shift_shapes_down(y)
+      score = score + 15;
     }
   }
 }
@@ -335,6 +346,7 @@ function update() {
   drop_shapes();
   draw_stopped_shapes();
   draw_grid();
+  score_element.innerHTML = score;
   // draw_board_debug();
   
 }
@@ -343,6 +355,8 @@ function update() {
 start();
 
 var speed = 400;
+var score = 0;
+var score_element = document.getElementById('score');
 
 function faster() {
   window.clearInterval(main_loop);
