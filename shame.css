@@ -14,9 +14,11 @@ body {
 
 #canvas_container {
   text-align: center;
-  
 }
 
-#below_canvas {
-  text-align: center;
+#debug-log {
+  max-height: 375px;
+  overflow: scroll;
+  border: 1px solid #222;
+  padding: 1em;
 }

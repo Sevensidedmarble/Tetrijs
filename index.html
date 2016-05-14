@@ -1,37 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>Tetris</title>
     <!-- Latest compiled and minified Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
     <!--
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    -->
-    
+         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+       -->
+
     <link rel="stylesheet" href="shame.css">
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <div id="canvas_container">
-                    <canvas id="main_canvas" width="195" height="360"></canvas>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <p>high-score:</p>
-                <p>seconds of your life wasted:</p>
-                </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div id="debug-log">
+          </div>
         </div>
+        <div class="col-md-4 text-center">
+          <div id="canvas_container">
+            <canvas id="main_canvas" width="195" height="360"></canvas>
+          </div>
+          <a href="https://github.com/Sevensidedmarble/Tetrijs" target="_blank">View on Github</a>
+        </div>
+        <div class="col-md-4">
+          <p>high-score: <span id="high-score"></span></p>
+          <p>seconds of your life wasted: <span id="seconds"></span></p>
+        </div>
+      </div>
     </div>
-    <div id="below_canvas">
-        <p>View on GitHub</p>
-    </div>
-</body>
-<script src="main.js"></script>
+  </body>
+  <script src="main.js"></script>
 </html>
