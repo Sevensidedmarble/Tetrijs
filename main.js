@@ -1,7 +1,121 @@
-var canvas = document.getElementById('main_canvas');
-var ctx = canvas.getContext('2d');
+var canvas = document.getElementById('main_canvas'),
+    ctx = canvas.getContext('2d'),
+    logger_element = document.getElementById('debug-log'),
+    seconds_element = document.getElementById('seconds'),
+    seconds_played = 0,
+    unit_size = 16,
+    grid_width = unit_size*10,
+    grid_height = unit_size*20,
+    grid_size = 16,
+    tetrominos = {
+      i:  [[1],
+           [1],
+           [1],
+           [1]],
+      j:  [[0,1],
+           [0,1],
+           [1,1]],
+      l:  [[1,0],
+           [1,0],
+           [1,1]],
+      o:  [[1,1],
+           [1,1]],
+      s:  [[0,1,1],
+           [1,1,0]],
+      t:  [[0,1,0],
+           [1,1,1]],
+      z:  [[1,1,0],
+           [0,1,1]]
+    }
+
+var current_shape, shapes, speed, score, game_score, high_score;
+var high_score_element = document.getElementById('high-score');
+var score_element = document.getElementById('score');
+var level = 1;
+var xp = level;
+var level_element = document.getElementById('level');
+
+var board = [];
+for (var x = 0; x <= 11; x++) {
+    board[x] = [];
+    for (var y = 0; y <= 20; y++) {
+        board[x][y] = false;
+    }
+} 
 
 // helper functions
+
+function hex_to_rgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function desaturate(r, g, b) {
+  var intensity = 0.03 * r + 0.059 * g + 0.011 * b;
+  var k = 1;
+  r = Math.floor(intensity * k + r * (1 - k));
+  g = Math.floor(intensity * k + g * (1 - k));
+  b = Math.floor(intensity * k + b * (1 - k));
+  return [r, g, b];
+}
+
+function rgb_to_string(r, g, b) {
+  return 'rgb(' + r + ', ' + g + ', ' + b + ')';
+}
+
+/*
+  onCSSAnimationEnd function below license:
+	By Osvaldas Valutis, www.osvaldas.info
+	Available for use under the MIT License
+*/
+
+;( function ( document, window, index )
+{
+	var s = document.body || document.documentElement, s = s.style, prefixAnimation = '', prefixTransition = '';
+
+	if( s.WebkitAnimation == '' )	prefixAnimation	 = '-webkit-';
+	if( s.MozAnimation == '' )		prefixAnimation	 = '-moz-';
+	if( s.OAnimation == '' )		prefixAnimation	 = '-o-';
+
+	if( s.WebkitTransition == '' )	prefixTransition = '-webkit-';
+	if( s.MozTransition == '' )		prefixTransition = '-moz-';
+	if( s.OTransition == '' )		prefixTransition = '-o-';
+
+	Object.prototype.onCSSAnimationEnd = function( callback )
+	{
+		var runOnce = function( e ){ callback(); e.target.removeEventListener( e.type, runOnce ); };
+		this.addEventListener( 'webkitAnimationEnd', runOnce );
+		this.addEventListener( 'mozAnimationEnd', runOnce );
+		this.addEventListener( 'oAnimationEnd', runOnce );
+		this.addEventListener( 'oanimationend', runOnce );
+		this.addEventListener( 'animationend', runOnce );
+		if( ( prefixAnimation == '' && !( 'animation' in s ) ) || getComputedStyle( this )[ prefixAnimation + 'animation-duration' ] == '0s' ) callback();
+		return this;
+	};
+
+	Object.prototype.onCSSTransitionEnd = function( callback )
+	{
+		var runOnce = function( e ){ callback(); e.target.removeEventListener( e.type, runOnce ); };
+		this.addEventListener( 'webkitTransitionEnd', runOnce );
+		this.addEventListener( 'mozTransitionEnd', runOnce );
+		this.addEventListener( 'oTransitionEnd', runOnce );
+		this.addEventListener( 'transitionend', runOnce );
+		this.addEventListener( 'transitionend', runOnce );
+		if( ( prefixTransition == '' && !( 'transition' in s ) ) || getComputedStyle( this )[ prefixTransition + 'transition-duration' ] == '0s' ) callback();
+		return this;
+	};
+}( document, window, 0 ));
+
 
 function get_random(obj) {
     var keys = Object.keys(obj)
@@ -44,34 +158,7 @@ function clone_object(obj) {
     return temp;
 }
 
-var unit_size = 16
-var grid_width = unit_size*10;
-var grid_height = unit_size*20;
-var grid_size = 16;
 
-var tetrominos = {
-  i:     [[0,1,0,0],
-          [0,1,0,0],
-          [0,1,0,0],
-          [0,1,0,0]],
-  j:     [[0,1,0],
-          [0,1,0],
-          [1,1,0]],
-  l:     [[1,0,0],
-          [1,0,0],
-          [1,1,0]],
-  o:     [[1,1],
-          [1,1]],
-  s:     [[0,1,1],
-          [1,1,0],
-          [0,0,0]],
-  t:     [[0,1,0],
-          [1,1,1],
-          [0,0,0]],
-  z:     [[1,1,0],
-          [0,1,1],
-          [0,0,0]]      
-}
 
 
 function draw_rect(color, x, y, w, h) {
@@ -97,6 +184,44 @@ var Shape = function (x,y,type) {
   this.l = type.length;
   this.stopped = false;
   this.color = get_random_color();
+  this.shadow_position = y;
+  this.set_shadow_position = function() {
+    var bottom;
+    var old_y = this.y;
+    while (!bottom) {
+      for(var i = 0; i < this.type.length; i++){
+        for(var n = 0; n < this.type[i].length; n++){
+          if ( n+this.y > 20 && this.type[i][n] == 1 ) {
+            bottom = this.y-1;
+          }
+          if ( this.type[i][n] == 1 && board[i+this.x][n+this.y] == true ) {
+            bottom = this.y-1;
+          }
+        }
+      }
+      this.y++;
+    }
+    this.y = old_y;
+    this.shadow_position = bottom;
+  }
+  this.draw_shadow = function() {
+    for(var i = 0; i < this.type.length; i++){
+      for(var n = 0; n < this.type[i].length; n++){
+        if ( this.type[i][n] == 1 ) {
+          draw_rect('grey', (this.x*unit_size)+(i*unit_size), (this.shadow_position*unit_size)+(n*unit_size), unit_size, unit_size);
+        }
+      }
+    }
+  }
+  this.clear_shadow = function() {
+    for(var i = 0; i < this.type.length; i++){
+      for(var n = 0; n < this.type[i].length; n++){
+        if ( this.type[i][n] == 1 ) {
+          ctx.clearRect((this.x*unit_size)+(i*unit_size), (this.shadow_position*unit_size)+(n*unit_size), unit_size, unit_size);
+        }
+      }
+    }
+  }
   this.set_board_values = function() {
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
@@ -140,8 +265,10 @@ var Shape = function (x,y,type) {
         }
       }
     }
+    this.clear_shadow();
   }
   this.draw = function() {
+    this.draw_shadow();
     for(var i = 0; i < this.type.length; i++){
       for(var n = 0; n < this.type[i].length; n++){
         if ( this.type[i][n] == 1 ) {
@@ -167,10 +294,12 @@ var Shape = function (x,y,type) {
       for(var n = 0; n < this.type[i].length; n++){
         if ( n+this.y > 20 && this.type[i][n] == 1 ) {
           this.stopped = true;
+          this.clear_shadow();
           return true;
         }
         if ( this.type[i][n] == 1 && board[i+this.x][n+this.y] == true ) {
           this.stopped = true;
+          this.clear_shadow();
           return true;
         }
       }
@@ -179,25 +308,49 @@ var Shape = function (x,y,type) {
     //   this.stopped = true;
     // }
   }
+  this.set_position = function(new_x,new_y) {
+    var old_x = this.x;
+    var old_y = this.y;
+    this.clear();
+    this.remove_board_values(); 
+    this.set_shadow_position();
+    
+    
+    this.y = new_y;
+    if (this.check_y_collision()) {
+
+      this.y = old_y;
+    }
+    
+    this.x = old_x;
+    if (this.check_x_collision()) {
+      this.x = old_x;
+
+    }
+    
+    this.set_board_values();
+    this.draw();
+  
+  }
   this.move = function(dir) {
-    // if (this.x+dir.x < 1 || this.x+dir.x > 9) {
-    //   return;
-    // }
     var old_x = this.x;
     var old_y = this.y;
     this.clear();
     this.remove_board_values(); 
     
+    this.set_shadow_position();
+    
     this.y = this.y + dir.y;
     if (this.check_y_collision()) {
-
+      if (old_y === 0) {
+        gameOver();
+      }
       this.y = old_y;
     }
     
     this.x = this.x + dir.x;
     if (this.check_x_collision()) {
       this.x = old_x;
-
     }
     
     this.set_board_values();
@@ -211,7 +364,8 @@ var Shape = function (x,y,type) {
       this.drop(); 
     }
   }
-  this.set_board_values();  
+  this.set_board_values();
+  // this.set_shadow_position();
 }
 
 function draw_grid(){
@@ -237,6 +391,12 @@ function check_lines() {
     }
     if (complete_line) { 
       console.log("line complete!");
+      xp++;
+      if ( xp > Math.pow(1.07, level) ) {
+        level++;
+      }
+      score += 1000;
+      add_increment_effect(1000);
       for (var x = 1; x <= 10; x++) {   
         if (board[x][y] == true) {  
           board[x][y] = false;
@@ -253,13 +413,7 @@ function check_lines() {
   }
 }
 
-var board = [];
-for (var x = 0; x <= 11; x++) {
-    board[x] = [];
-    for (var y = 0; y <= 20; y++) {
-        board[x][y] = false;
-    }
-} 
+
 
 function shift_shapes_down(y) {
   for (var i = 0; i < shapes.length; i++) {
@@ -303,38 +457,30 @@ function drop_shapes() {
 
 
 
-function keydown_event(e) {
-  switch(e.keyCode) {
-    case 37:
-        // left key pressed
-        shapes[current_shape].move( {x:-1, y:0} )
-        break;
-    case 38:
-        // up key pressed
-        shapes[current_shape].rotate_self();
-        break;
-    case 39:
-        // right key pressed
-        shapes[current_shape].move( {x:1, y:0} )
-        break;
-    case 40:
-        // down key pressed
-        shapes[current_shape].drop_to_bottom();
-        break;  
-  } 
+
+function add_increment_effect(amount) {
+  var span = document.createElement("span");
+  var string = "+" + amount + "!"; 
+  var text = document.createTextNode(string);
+  span.appendChild(text);
+  span.classList.add("fade_up");
+  span.onCSSAnimationEnd( function() { span.parentNode.removeChild(span); });
+  score_element.insertAdjacentElement('afterend', span);
 }
 
-var current_shape = 0
-var shapes = [];
 
 function get_new_shape(index) {
-  
   shapes[index] = new Shape(5,0,clone_object(get_random(tetrominos)));
   current_shape = index;
 }
 
 function start() {
+  current_shape = 0;
+  shapes = [];
+  speed = 400;
+  score = 0;
   get_new_shape(current_shape);
+  
 }
 
 function update() {
@@ -348,16 +494,13 @@ function update() {
   draw_grid();
   score++;
   score_element.innerHTML = score;
+  level_element.innerHTML = level;
   // draw_board_debug();
-  
 }
 
 // run once at beginning of the game
 start();
-
-var speed = 400;
-var score = 0;
-var score_element = document.getElementById('score');
+// add_increment_effect()
 
 function faster() {
   window.clearInterval(main_loop);
@@ -371,10 +514,79 @@ function slower() {
   main_loop = window.setInterval(function(){ update(); }, speed);
 }
 
-// get called repeatedly throughout the game
+function pause() {
+  clearInterval(main_loop);
+  main_loop = null;
+}
+
+function resume() {
+  main_loop = setInterval(function() { update(); }, speed);
+}
+
+function gameOver() {
+  pause();
+  console.log("Game Over");
+  game_score = score;
+  if (game_score > high_score) {
+    high_score = game_score;
+    high_score_element.innerHTML = high_score;
+    if (localStorage !== undefined) {
+      localStorage.setItem('high_score', high_score);
+    }
+  }
+}
+
+function keydown_event(e) {
+  switch(e.keyCode) {
+    case 37:
+        // left key
+        shapes[current_shape].move( {x:-1, y:0} )
+        break;
+    case 38:
+        // up key
+        shapes[current_shape].rotate_self();
+        break;
+    case 39:
+        // right key
+        shapes[current_shape].move( {x:1, y:0} )
+        break;
+    case 40:
+        // down key
+        shapes[current_shape].drop_to_bottom();
+        break;  
+    case 32:
+      // space key
+      if (main_loop) { pause(); } else { resume(); }
+  } 
+}
+
+// get called repeatedly
 main_loop = window.setInterval(function(){
   update();
 }, speed);
 
 // set up keyboard events
 window.addEventListener("keydown", keydown_event, false);
+
+setInterval(function() {
+  if (!high_score) {
+    if (localStorage !== undefined) {
+      high_score = parseInt(localStorage.getItem('high_score')) || 0;
+    } else {
+      high_score = 0;
+    }
+  }
+  high_score_element.innerHTML = high_score;
+  if (!seconds_played) {
+    if (localStorage !== undefined) {
+      seconds_played = parseInt(localStorage.getItem('seconds_played')) || 0;
+    } else {
+      seconds_played = 0;
+    }
+  }
+  seconds_played++;
+  seconds.innerText = seconds_played;
+  if (localStorage !== undefined) {
+    localStorage.setItem('seconds_played', seconds_played);
+  }
+}, 1000);
